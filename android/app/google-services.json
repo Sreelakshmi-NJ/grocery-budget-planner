@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1019305833832",
+    "firebase_url": "https://grocerybudgetplanner-1a693-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "grocerybudgetplanner-1a693",
+    "storage_bucket": "grocerybudgetplanner-1a693.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1019305833832:android:520a5e20f9892cac2152dd",
+        "android_client_info": {
+          "package_name": "com.example.grocery_budget_planner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8HEpdYfezs4w8BxdNkVHDG0-c0YH_Rz4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

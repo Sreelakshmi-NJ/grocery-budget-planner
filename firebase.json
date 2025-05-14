@@ -1,0 +1,49 @@
+{
+  "emulators": {
+    "dataconnect": {
+      "dataDir": "dataconnect/.dataconnect/pgliteData"
+    }
+  },
+  "dataconnect": {
+    "source": "dataconnect"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "grocerybudgetplanner-1a693",
+          "appId": "1:1019305833832:android:520a5e20f9892cac2152dd",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "grocerybudgetplanner-1a693",
+          "configurations": {
+            "android": "1:1019305833832:android:520a5e20f9892cac2152dd",
+            "ios": "1:1019305833832:ios:23dad76fb072c3ab2152dd",
+            "macos": "1:1019305833832:ios:23dad76fb072c3ab2152dd",
+            "web": "1:1019305833832:web:4f7dfbd2b7ba45a12152dd",
+            "windows": "1:1019305833832:web:a9a39f83b82678432152dd"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint"
+      ]
+    }
+  ]
+}

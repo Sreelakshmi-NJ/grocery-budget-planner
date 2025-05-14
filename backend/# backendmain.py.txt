@@ -1,0 +1,50 @@
+# backend/main.py
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import numpy as np
+
+app = Flask(__name__)
+CORS(app)  # Enable CORS so your Flutter app can call this API
+
+def generate_cost_saving_tips(monthly_budget, current_spending):
+    """
+    Generate cost-saving tips based on monthly budget and current spending.
+    """
+    if monthly_budget <= 0:
+        return ["Please provide a valid monthly budget greater than 0."]
+    
+    savings_rate = 1 - (current_spending / monthly_budget)
+    tips = []
+    
+    if savings_rate < 0.2:
+        tips.append("Your spending is high. Tighten your budget and track expenses daily.")
+    else:
+        tips.append("Good job! Consider exploring bulk discounts to save even more.")
+    
+    if current_spending > monthly_budget * 0.8:
+        tips.append("Alert: Your spending exceeds 80% of your budget. Review and cut non-essential expenses.")
+    else:
+        tips.append("Plan your grocery list in advance to avoid impulse purchases.")
+    
+    # Add a random tip for variety
+    if np.random.rand() > 0.5:
+        tips.append("Check local store flyers for discount offers this week.")
+    else:
+        tips.append("Use digital coupons or loyalty apps to maximize your savings.")
+    
+    return tips
+
+@app.route('/suggestions', methods=['POST'])
+def suggestions():
+    try:
+        data = request.get_json()
+        monthly_budget = float(data.get('monthlyBudget', 0))
+        current_spending = float(data.get('currentSpent', 0))
+        tips = generate_cost_saving_tips(monthly_budget, current_spending)
+        return jsonify({"status": "success", "tips": tips}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+if __name__ == '__main__':
+    # Run on port 5000 and listen on all network interfaces
+    app.run(host="0.0.0.0", port=5000, debug=True)

@@ -1,0 +1,174 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Helper function to check if user is a member of a shared budget
+    function isMemberOfBudget(budgetId) {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/sharedBudgets/$(budgetId)) &&
+        request.auth.uid in get(/databases/$(database)/documents/sharedBudgets/$(budgetId)).data.members;
+    }
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user owns the resource
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Helper function to validate expense data
+    function isValidExpense() {
+      let data = request.resource.data;
+      return data.amount is number && data.amount > 0 &&
+             data.category is string && data.category.size() > 0 &&
+             data.userId is string;
+    }
+
+    // Helper function to validate budget data
+    function isValidBudget() {
+      let data = request.resource.data;
+      return data.monthlyBudget is number && data.monthlyBudget >= 0;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin(); // Only admins can delete users
+    }
+
+    // Categories Collection (Admin Management)
+    match /categories/{categoryId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Analytics Collection (Admin Only)
+    match /analytics/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Admin Reports Collection
+    match /adminReports/{reportId} {
+      allow read: if isAdmin(); // Only admins can read admin reports
+      allow write: if isAdmin(); // Only admins can write admin reports
+    }
+
+    // Shared Budgets Collection
+    match /sharedBudgets/{budgetId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        request.resource.data.members is list && 
+        request.resource.data.members.hasAll([request.auth.uid]);
+      allow update: if isAuthenticated() && (
+        (resource.data.members.hasAll([request.auth.uid]) || isAdmin()) ||
+        // Allow joining via join code
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members']) &&
+         resource.data.joinCode == request.resource.data.joinCode &&
+         request.resource.data.members.hasAll(resource.data.members) &&
+         request.resource.data.members.removeAll(resource.data.members).size() == 1 &&
+         request.resource.data.members.removeAll(resource.data.members).hasAll([request.auth.uid]))
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Shared Budget Contributions
+    match /sharedBudgetContributions/{contributionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        isMemberOfBudget(request.resource.data.budgetId);
+      allow update, delete: if isAuthenticated() && (
+        isMemberOfBudget(resource.data.budgetId) || isAdmin()
+      );
+    }
+
+    // Shared Budget Expenses
+    match /sharedExpenses/{expenseId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        isMemberOfBudget(request.resource.data.budgetId);
+      allow update, delete: if isAuthenticated() && (
+        isMemberOfBudget(resource.data.budgetId) || isAdmin()
+      );
+    }
+
+    // Regular Budget Collection
+    match /budgets/{userId}/monthlyBudgets/{monthId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+
+    // Expenses Collection
+    match /expenses/{expenseId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // Shopping List Collection
+    match /shoppingList/{docId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // Price Comparison Collection
+    match /priceComparison/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Pantry Collection
+    match /pantry/{docId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // Meal Plans Collection
+    match /mealPlans/{docId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // Gamification Collection
+    match /gamification/{userId}/monthlyStats/{monthKey} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+
+    // Discounts Collection
+    match /discounts/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+  }
+} 

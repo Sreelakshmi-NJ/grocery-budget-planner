@@ -1,0 +1,33 @@
+openapi: 3.0.0
+info:
+  title: Grocery Budget Planner API
+  version: "1.0"
+  description: API for cost-saving suggestions and discount information for the Grocery Budget Planner app.
+servers:
+  - url: https://api.yourdomain.com/v1
+paths:
+  /discounts:
+    get:
+      summary: Get cost-saving tips and discounts.
+      parameters:
+        - in: query
+          name: location
+          schema:
+            type: string
+          description: User's location to filter relevant discounts.
+      responses:
+        '200':
+          description: A JSON array of discount items.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                    description:
+                      type: string
+                    savings:
+                      type: number
